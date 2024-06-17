@@ -1,4 +1,4 @@
-            - name: Upstream Sync
+name: Upstream Sync
   # You may pin to the exact commit or the version.
   # uses: aormsby/Fork-Sync-With-Upstream-action@1090e365224fc834e7e1de521c417ded2d6fcb53
   uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
