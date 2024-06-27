@@ -156,4 +156,8 @@ public class Rs2Magic {
     public static boolean isModern() {
         return Microbot.getVarbitValue(Varbits.SPELLBOOK) == 0;
     }
+
+    public static boolean isArceuus() {
+        return Microbot.getVarbitValue(Varbits.SPELLBOOK) == 3;
+    }
 }
