@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.microbot.util.player;
 
+import lombok.Getter;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
@@ -40,7 +41,6 @@ public class Rs2Player {
 
     public static int antiPoisonTime = -1;
 
-
     public static boolean hasAntiFireActive() {
         return antiFireTime > 0 || hasSuperAntiFireActive();
     }
@@ -66,6 +66,7 @@ public class Rs2Player {
             return true;
         } else return antiVenomTime < VENOM_VALUE_CUTOFF;
     }
+
     public static boolean hasAntiPoisonActive() {
         return antiPoisonTime > 0;
     }
@@ -93,8 +94,7 @@ public class Rs2Player {
             }
             final int poisonVarp = event.getValue();
 
-            if (poisonVarp == 0)
-            {
+            if (poisonVarp == 0) {
                 antiPoisonTime = -1;
             } else {
                 antiPoisonTime = poisonVarp;
@@ -180,10 +180,9 @@ public class Rs2Player {
     }
 
     /**
-     *
      * @param amountOfPlayers to detect before triggering logout
-     * @param time in milliseconds
-     * @param distance from the player
+     * @param time            in milliseconds
+     * @param distance        from the player
      * @return
      */
     public static boolean logoutIfPlayerDetected(int amountOfPlayers, int time, int distance) {
@@ -220,7 +219,6 @@ public class Rs2Player {
     }
 
     /**
-     *
      * @param amountOfPlayers
      * @param time
      * @return
@@ -230,7 +228,6 @@ public class Rs2Player {
     }
 
     /**
-     *
      * @param amountOfPlayers
      * @return
      */
@@ -265,6 +262,7 @@ public class Rs2Player {
             return Microbot.getClient().getLocalPlayer().getWorldLocation();
         }
     }
+
     public static LocalPoint getLocalLocation() {
         return Microbot.getClient().getLocalPlayer().getLocalLocation();
     }
@@ -278,7 +276,7 @@ public class Rs2Player {
     }
 
     public static boolean drinkPrayerPotionAt(int prayerPoints) {
-        if  (Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER) <= prayerPoints) {
+        if (Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER) <= prayerPoints) {
             return Rs2Inventory.interact("prayer potion", "drink");
         }
         return false;
@@ -311,17 +309,17 @@ public class Rs2Player {
         return Microbot.getClientThread().runOnClientThread(() -> quest.getState(client));
     }
 
-    public static int getRealSkillLevel(Skill skill){
+    public static int getRealSkillLevel(Skill skill) {
         Client client = Microbot.getClient();
         return client.getRealSkillLevel(skill);
     }
 
-    public static int getBoostedSkillLevel(Skill skill){
+    public static int getBoostedSkillLevel(Skill skill) {
         Client client = Microbot.getClient();
         return client.getBoostedSkillLevel(skill);
     }
 
-    public static boolean getSkillRequirement(Skill skill, int levelRequired, boolean isBoosted){
+    public static boolean getSkillRequirement(Skill skill, int levelRequired, boolean isBoosted) {
         if (isBoosted) return getBoostedSkillLevel(skill) >= levelRequired;
         return getRealSkillLevel(skill) >= levelRequired;
     }
@@ -331,8 +329,20 @@ public class Rs2Player {
         return accountType > 0 && accountType <= 3;
     }
 
-    public static boolean isGroupIronman(){
+    public static boolean isGroupIronman() {
         int accountType = Microbot.getVarbitValue(Varbits.ACCOUNT_TYPE);
         return accountType >= 4;
+    }
+
+
+    /**
+     * 0 = Standard |
+     * 1 = Ancient |
+     * 2 = Lunar |
+     * 3 = Arceus
+     * @return int
+     */
+    public static int getSpellBook() {
+        return Microbot.getClient().getVarbitValue(Varbits.SPELLBOOK);
     }
 }
