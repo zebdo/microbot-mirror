@@ -2,28 +2,36 @@ package net.runelite.client.plugins.microbot.thieving;
 
 import net.runelite.api.NPC;
 import net.runelite.api.Skill;
+import net.runelite.api.Varbits;
 import net.runelite.client.game.npcoverlay.HighlightedNpc;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.globval.enums.InterfaceTab;
 import net.runelite.client.plugins.microbot.thieving.enums.ThievingNpc;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 import net.runelite.client.plugins.timers.TimersPlugin;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static net.runelite.api.ItemID.BOOK_OF_THE_DEAD;
+
 public class ThievingScript extends Script {
 
-    public static String version = "1.5.1";
+    public static String version = "1.6.1";
     ThievingConfig config;
 
     public boolean run(ThievingConfig config) {
@@ -51,6 +59,9 @@ public class ThievingScript extends Script {
                 openCoinPouches(config);
                 wearDodgyNecklace();
                 Rs2Player.eatAt(config.hitpoints());
+                if (config.shadowVeil() && Microbot.getVarbitValue(Varbits.SHADOW_VEIL) == 0) {
+                        castShadowVeil();
+                    }
                 pickpocket();
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
@@ -99,7 +110,10 @@ public class ThievingScript extends Script {
         if (Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) < config.hitpoints())
             return;
         if (config.THIEVING_NPC() != ThievingNpc.NONE) {
-            sleepUntil(() -> TimersPlugin.t == null || !TimersPlugin.t.render());
+            sleepUntil(() -> TimersPlugin.t == null
+                    || (!TimersPlugin.t.render())
+                    || (TimersPlugin.t.render() && !Objects.equals(TimersPlugin.t.getName(), "PICKPOCKET_STUN")));
+            System.out.println(TimersPlugin.t.getName());
             if (config.THIEVING_NPC() == ThievingNpc.ELVES) {
                 handleElves();
             } else {
@@ -127,6 +141,19 @@ public class ThievingScript extends Script {
             Rs2Bank.depositAll();
             Rs2Bank.withdrawX(true, config.food().getName(), config.foodAmount(), true);
             Rs2Bank.withdrawX(true, "dodgy necklace", config.dodgyNecklaceAmount());
+            if (config.shadowVeil()) {
+                Rs2Bank.withdrawAll(true,"Fire rune", true);
+                sleep(75,200);
+                Rs2Bank.withdrawAll(true,"Earth rune", true);
+                sleep(75,200);
+                Rs2Bank.withdrawAll(true,"Cosmic rune", true);
+                sleep(75,200);
+                if (config.equipBook()) {
+                    Rs2Bank.withdrawAndEquip(BOOK_OF_THE_DEAD);
+                } else {
+                    Rs2Bank.withdrawItem(true,BOOK_OF_THE_DEAD);
+                }
+            }
             Rs2Bank.closeBank();
         }
     }
@@ -142,4 +169,30 @@ public class ThievingScript extends Script {
         doNotDropItemList.add("dodgy necklace");
         Rs2Inventory.dropAllExcept(config.keepItemsAboveValue(), doNotDropItemList);
     }
+
+    private boolean castShadowVeil() {
+        if (!Rs2Magic.isArceuus()) {
+            return false;
+        } else if (!(Rs2Player.getBoostedSkillLevel(Skill.MAGIC) >= MagicAction.SHADOW_VEIL.getLevel())) {
+            return false;
+        } else if (Microbot.getVarbitValue(Varbits.SHADOW_VEIL) == 1) {
+            return false;
+        } else if (Microbot.getVarbitValue(Varbits.SHADOW_VEIL_COOLDOWN) == 1) {
+            return false;
+        } else if (!Rs2Inventory.containsAll("Fire rune", "Cosmic rune", "Earth rune") &&
+                !(Rs2Inventory.contains(BOOK_OF_THE_DEAD) || Rs2Equipment.hasEquipped(BOOK_OF_THE_DEAD))) {
+            return false;
+        }
+        else {
+            sleepUntil(() -> {
+                Rs2Tab.switchToMagicTab();
+                sleep(50, 150);
+                return Rs2Tab.getCurrentTab() == InterfaceTab.MAGIC;
+            });
+            Rs2Magic.cast(MagicAction.SHADOW_VEIL);
+            Rs2Tab.switchToInventoryTab();
+            return true;
+        }
+    }
 }
+
